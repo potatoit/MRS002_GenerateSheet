@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "outFile": "js/MRS002_GenerateSheet.js",
+    "module": "none",
+    "skipLibCheck": true,
+    "target": "es5",
+    "sourceMap": true,
+    "watch": true,
+    "allowJs": true
+    //"baseUrl": "./",
+    //"paths": {
+    //  "exceljs": [ "../node_modules/exceljs/dist/es5/exceljs.browser" ]
+    //}
+    },
+  "include": [ "**/*.ts"]
+}

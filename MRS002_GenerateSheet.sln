@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29009.5
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "H5 Scripts", "Samples\H5 Scripts.csproj", "{3FC9C988-BF29-4864-9A3E-837FF33DBD92}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3FC9C988-BF29-4864-9A3E-837FF33DBD92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FC9C988-BF29-4864-9A3E-837FF33DBD92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FC9C988-BF29-4864-9A3E-837FF33DBD92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FC9C988-BF29-4864-9A3E-837FF33DBD92}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {121187B0-7D84-4795-A340-63175542C104}
+	EndGlobalSection
+EndGlobal

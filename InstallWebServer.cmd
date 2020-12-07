@@ -1,0 +1,3 @@
+cd Nodejs
+echo Installing web server...
+npm install connect && npm install serve-static && pause
