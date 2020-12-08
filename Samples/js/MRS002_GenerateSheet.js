@@ -13609,7 +13609,7 @@ var apiField = /** @class */ (function () {
                 v: "yes",
                 i: true,
                 border: { bottom: { style: "medium", color: "000000" } },
-                fg: { fgColor: { rgb: 'FFBB0000' } }
+                fg: { fgColor: { rgb: 'FFFF5500' } }
             });
         }
         else {
@@ -13623,14 +13623,14 @@ var apiField = /** @class */ (function () {
     apiField.prototype.generateDescriptionRow = function () {
         if (this.mandatory === "1") {
             return ({
-                v: this.fieldDescription,
+                v: this.fieldDescription + " (" + this.fieldType + ":" + this.length + ")",
                 i: true,
-                fg: { fgColor: { rgb: 'FFBB0000' } }
+                fg: { fgColor: { rgb: 'FFFF5500' } }
             });
         }
         else {
             return ({
-                v: this.fieldDescription,
+                v: this.fieldDescription + " (" + this.fieldType + ":" + this.length + ")",
                 i: true
             });
         }
@@ -13640,7 +13640,7 @@ var apiField = /** @class */ (function () {
             return ({
                 v: this.fieldName,
                 b: true,
-                fg: { fgColor: { rgb: 'FFBB0000' } }
+                fg: { fgColor: { rgb: 'FFFF5500' } }
             });
         }
         else {
@@ -13711,7 +13711,6 @@ var MRS002_GenerateSheet = /** @class */ (function () {
     function MRS002_GenerateSheet(args) {
         this.gContent = null;
         this.gSheetsName = "Control";
-        this.itemLookupTable = [];
         this.gController = args.controller;
         this.gDebug = args.log;
         this.gArgs = args.args;
@@ -13799,12 +13798,12 @@ var MRS002_GenerateSheet = /** @class */ (function () {
         var result = new rowResult();
         result.startRow = 0;
         var titleRow = [{ v: "MESSAGE", b: true }];
-        var descriptionRow = [{ v: "Description", b: true }];
+        var descriptionRow = [{ v: "Description (<type>:<length>)", b: true }];
         var processRow = [{ v: "no", b: true, border: { bottom: { style: "medium", color: "000000" } } }];
-        result.maxCharacters[0] = 11;
+        result.maxCharacters[0] = 25;
         if (amiAPIs && amiAPIs.incomingFields && amiAPIs.incomingFields.length > 0) {
             for (var i = 0; i < amiAPIs.incomingFields.length; i++) {
-                result.maxCharacters[i + 1] = amiAPIs.incomingFields[i].fieldDescription.length;
+                result.maxCharacters[i + 1] = (amiAPIs.incomingFields[i].fieldDescription.length + 5 + amiAPIs.incomingFields[i].length.toString().length);
                 if (result.maxCharacters[i + 1] < 5)
                     result.maxCharacters[i + 1] = 5;
                 titleRow.push(amiAPIs.incomingFields[i].generateTitleRow());
@@ -13914,6 +13913,9 @@ var MRS002_GenerateSheet = /** @class */ (function () {
                         if (dTemp.numFmt) {
                             numberFormat = dTemp.numFmt;
                         }
+                        if (dTemp.i) {
+                            italics = true;
+                        }
                     }
                     var cell = {
                         v: dValue
@@ -13935,7 +13937,7 @@ var MRS002_GenerateSheet = /** @class */ (function () {
                     if (formula) {
                         cell.f = formula;
                     }
-                    if (true == bold || true == underline || null != fontSize || true == wrapText || null != fill || null != fontColour || null != border || null != numberFormat) {
+                    if (true == bold || true == underline || null != fontSize || true == wrapText || null != fill || null != fontColour || null != border || null != numberFormat || true == italics) {
                         if (cell.s == undefined) {
                             cell.s = {};
                             if (cell.s.font == undefined) {
@@ -13945,6 +13947,9 @@ var MRS002_GenerateSheet = /** @class */ (function () {
                                 }
                                 if (true == underline) {
                                     cell.s.font.underline = underline;
+                                }
+                                if (true == italics) {
+                                    cell.s.font.italic = italics;
                                 }
                                 if (null != fontSize) {
                                     cell.s.font.sz = fontSize;
@@ -14010,9 +14015,14 @@ var MRS002_GenerateSheet = /** @class */ (function () {
     MRS002_GenerateSheet.prototype.MRS001MI_LstFields = function (aProgramName, aTransaction, aDirection) {
         var _this_1 = this;
         return new Promise(function (resolve) {
-            var record = { 'MINM': aProgramName, 'TRNM': aTransaction, 'TRTP': aDirection };
-            var outputFields = ['MINM', 'TRNM', 'TRTP', 'FLNM', 'FLDS', 'LENG', 'TYPE', 'MAND'];
-            MIService.Current.execute("MRS001MI", "LstFields", record, outputFields).then(function (response) {
+            var request = new MIRequest();
+            request.program = "MRS001MI";
+            request.transaction = "LstFields";
+            request.record = { 'MINM': aProgramName, 'TRNM': aTransaction, 'TRTP': aDirection };
+            request.outputFields = ['MINM', 'TRNM', 'TRTP', 'FLNM', 'FLDS', 'LENG', 'TYPE', 'MAND'];
+            // this should not be done where we will have large numbers of records!
+            request.maxReturnedRecords = 0;
+            MIService.Current.executeRequest(request).then(function (response) {
                 if (null != response && null != response.items && response.items.length > 0) {
                     var result = [];
                     for (var i = 0; i < response.items.length; i++) {
@@ -14039,14 +14049,6 @@ var MRS002_GenerateSheet = /** @class */ (function () {
     // ***************************
     // * -- Utility functions -- *
     // ***************************
-    MRS002_GenerateSheet.prototype.getBrowserLocale = function () {
-        if (navigator.language != undefined) {
-            return (navigator.languages[0]);
-        }
-        else {
-            return (navigator.language);
-        }
-    };
     MRS002_GenerateSheet.prototype.addButton = function (_a) {
         var text = _a.text, width = _a.width, top = _a.top, left = _a.left, id = _a.id;
         var buttonElement = new ButtonElement();
@@ -14061,100 +14063,6 @@ var MRS002_GenerateSheet = /** @class */ (function () {
         var contentElement = this.gController.GetContentElement();
         contentElement.Add(button);
         return button;
-    };
-    MRS002_GenerateSheet.prototype.addDays = function (date, days) {
-        var result = new Date(date);
-        result.setDate(result.getDate() + days);
-        return result;
-    };
-    MRS002_GenerateSheet.prototype.convertDateToM3Format = function (aDate) {
-        return ("" + aDate.getFullYear() + ("00" + (aDate.getMonth() + 1)).slice(-2) + ("00" + (aDate.getDate())).slice(-2));
-    };
-    MRS002_GenerateSheet.prototype.convertDateToYYYYMMddWithSlashes = function (aDate) {
-        return ("" + aDate.getFullYear() + "/" + ("00" + (aDate.getMonth() + 1)).slice(-2) + "/" + ("00" + (aDate.getDate())).slice(-2));
-    };
-    MRS002_GenerateSheet.prototype.convertDateToYYYYMMddWithDashes = function (aDate) {
-        return ("" + aDate.getFullYear() + "-" + ("00" + (aDate.getMonth() + 1)).slice(-2) + "-" + ("00" + (aDate.getDate())).slice(-2));
-    };
-    MRS002_GenerateSheet.prototype.convertM3DateToDate = function (aM3Date) {
-        var result = null;
-        if (aM3Date.length > 7) {
-            try {
-                result = new Date(aM3Date.substr(0, 4) + "/" + aM3Date.substr(4, 2) + "/" + aM3Date.substr(6, 2));
-            }
-            catch (ex) {
-                this.gDebug.Error("Failed to convert '" + aM3Date + "' to a valid date object");
-            }
-        }
-        else {
-            this.gDebug.Debug("convertM3DateToDate() fail");
-            this.gDebug.Debug(" +--" + aM3Date.length);
-        }
-        return (result);
-    };
-    MRS002_GenerateSheet.prototype.ordinalSuffix = function (n) {
-        var j = n % 10, k = n % 100;
-        if (j == 1 && k != 11) {
-            return n + "st";
-        }
-        if (j == 2 && k != 12) {
-            return n + "nd";
-        }
-        if (j == 3 && k != 13) {
-            return n + "rd";
-        }
-        return (n + "th");
-    };
-    MRS002_GenerateSheet.prototype.calculateNumberOfDays = function (aStartDate, aEndDate) {
-        var dateRangeMS = aEndDate.getTime() - aStartDate.getTime();
-        return (Math.ceil((dateRangeMS / (1000 * 3600 * 24) + 1)));
-    };
-    // ***************************
-    // * -- item lookup table -- *
-    // ***************************
-    MRS002_GenerateSheet.prototype.addRelatedItem = function (aFacility, aItemNumber, aRelatedItem) {
-        var relatedItems = this.getRelatedItemNumbers(aFacility, aItemNumber);
-        if (relatedItems && relatedItems.length > 0) {
-            var relatedItem = relatedItems[0];
-            if (-1 == relatedItem.childItems.findIndex(function (c) { return c == aRelatedItem; })) {
-                relatedItem.childItems.push(aRelatedItem);
-            }
-        }
-        else {
-            this.itemLookupTable.push({
-                facility: aFacility,
-                itemNumber: aItemNumber,
-                childItems: [aRelatedItem]
-            });
-        }
-    };
-    MRS002_GenerateSheet.prototype.isRelatedItemNumberValid = function (aFacility, aItemNumber, aRelatedItemNumber) {
-        var result = false;
-        var relatedItems = this.getRelatedItemNumbers(aFacility, aItemNumber);
-        if (relatedItems && relatedItems.length > 0 && relatedItems[0].childItems.length > 0) {
-            if (-1 != relatedItems[0].childItems.findIndex(function (c) { return c == aRelatedItemNumber; })) {
-                result = true;
-            }
-        }
-        return (result);
-    };
-    MRS002_GenerateSheet.prototype.getRelatedItemNumbers = function (aFacility, aItemNumber) {
-        return (this.itemLookupTable.filter(function (data) { return data.facility == aFacility && data.itemNumber == aItemNumber; }));
-    };
-    MRS002_GenerateSheet.prototype.getRelatedItemNumbersChildren = function (aFacility, aItemNumber) {
-        var result = null;
-        var relatedItemNumbers = this.getRelatedItemNumbers(aFacility, aItemNumber);
-        if (null != relatedItemNumbers && undefined != relatedItemNumbers && relatedItemNumbers.length > 0) {
-            var relatedItemNumber = relatedItemNumbers[0];
-            if (null != relatedItemNumber.childItems && relatedItemNumber.childItems.length > 0) {
-                result = relatedItemNumber.childItems;
-            }
-        }
-        return (result);
-    };
-    MRS002_GenerateSheet.prototype.isValidFacility = function (aFacility) {
-        var result = true;
-        return (result);
     };
     MRS002_GenerateSheet.prototype.convertCharactersToWidth = function (aCharacters) {
         var result = [];

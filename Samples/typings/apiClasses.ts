@@ -25,7 +25,7 @@ class apiField {
                     v: "yes",
                     i: true,
                     border: { bottom: {style: "medium", color: "000000"}},
-                    fg: { fgColor: { rgb: 'FFBB0000' } }
+                    fg: { fgColor: { rgb: 'FFFF5500' } }
                 }
             );
         }
@@ -44,16 +44,16 @@ class apiField {
         if (this.mandatory === "1") {
             return (
                 {
-                    v: this.fieldDescription,
+                    v: this.fieldDescription + " (" + this.fieldType + ":" + this.length + ")",
                     i: true,
-                    fg: { fgColor: { rgb: 'FFBB0000' } }
+                    fg: { fgColor: { rgb: 'FFFF5500' } }
                 }
             );
         }
         else {
             return (
                 {
-                    v: this.fieldDescription,
+                    v: this.fieldDescription + " (" + this.fieldType + ":" + this.length + ")",
                     i: true
                 }
             );
@@ -67,7 +67,7 @@ class apiField {
                 {
                     v: this.fieldName,
                     b: true,
-                    fg: { fgColor: { rgb: 'FFBB0000'}}
+                    fg: { fgColor: { rgb: 'FFFF5500'}}
                 }
             );
         }

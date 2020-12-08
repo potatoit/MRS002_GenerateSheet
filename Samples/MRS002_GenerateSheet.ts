@@ -13,6 +13,8 @@
  *  
  * */
 
+//import { METHODS } from "http";
+
 //import { string } from "../node_modules/xlsx-style/dist/xlsx.full.min";
 
 // <reference path="../node_modules/xlsx-style/dist/xlsx.core.min.js" />
@@ -117,14 +119,14 @@ class MRS002_GenerateSheet {
         result.startRow = 0;
 
         let titleRow = [{ v: "MESSAGE", b: true }];
-        let descriptionRow = [{ v: "Description", b: true }];
+        let descriptionRow = [{ v: "Description (<type>:<length>)", b: true }];
         let processRow = [{ v: "no", b: true, border: { bottom: { style: "medium", color: "000000" } } }];
 
-        result.maxCharacters[0] = 11;
+        result.maxCharacters[0] = 25;
 
         if (amiAPIs && amiAPIs.incomingFields && amiAPIs.incomingFields.length > 0) {
             for (let i = 0; i < amiAPIs.incomingFields.length; i++) {
-                result.maxCharacters[i + 1] = amiAPIs.incomingFields[i].fieldDescription.length;
+                result.maxCharacters[i + 1] = (amiAPIs.incomingFields[i].fieldDescription.length + 5 + amiAPIs.incomingFields[i].length.toString().length);
                 if (result.maxCharacters[i + 1] < 5) result.maxCharacters[i + 1] = 5;
 
                 titleRow.push(amiAPIs.incomingFields[i].generateTitleRow());
@@ -244,6 +246,9 @@ class MRS002_GenerateSheet {
                         if (dTemp.numFmt) {
                             numberFormat = dTemp.numFmt;
                         }
+                        if (dTemp.i) {
+                            italics = true;
+                        }
                     }
 
                     var cell: any = {
@@ -264,7 +269,7 @@ class MRS002_GenerateSheet {
                         cell.f = formula;
                     }
 
-                    if (true == bold || true == underline || null != fontSize || true == wrapText || null != fill || null != fontColour || null != border || null != numberFormat) {
+                    if (true == bold || true == underline || null != fontSize || true == wrapText || null != fill || null != fontColour || null != border || null != numberFormat || true == italics) {
                         if (cell.s == undefined) {
                             cell.s = {};
 
@@ -275,6 +280,9 @@ class MRS002_GenerateSheet {
                                 }
                                 if (true == underline) {
                                     cell.s.font.underline = underline;
+                                }
+                                if (true == italics) {
+                                    cell.s.font.italic = italics;
                                 }
                                 if (null != fontSize) {
                                     cell.s.font.sz = fontSize;
@@ -349,10 +357,18 @@ class MRS002_GenerateSheet {
 
     private MRS001MI_LstFields(aProgramName : string, aTransaction : string, aDirection: string) {
         return new Promise<any>((resolve) => {
-            let record = { 'MINM': aProgramName, 'TRNM': aTransaction, 'TRTP': aDirection };
-            let outputFields = ['MINM', 'TRNM', 'TRTP', 'FLNM', 'FLDS', 'LENG', 'TYPE', 'MAND'];
+            let request = new MIRequest();
 
-            MIService.Current.execute("MRS001MI", "LstFields", record, outputFields).then((response: IMIResponse) => {
+            request.program = "MRS001MI";
+            request.transaction = "LstFields";
+            request.record = { 'MINM': aProgramName, 'TRNM': aTransaction, 'TRTP': aDirection };
+            request.outputFields = ['MINM', 'TRNM', 'TRTP', 'FLNM', 'FLDS', 'LENG', 'TYPE', 'MAND'];
+
+            // this should not be done where we will have large numbers of records!
+            request.maxReturnedRecords = 0;
+
+
+            MIService.Current.executeRequest(request).then((response: IMIResponse) => {
                 if (null != response && null != response.items && response.items.length > 0) {
                     let result: apiField[] = [];
                     for (let i = 0; i < response.items.length; i++) {
@@ -383,14 +399,6 @@ class MRS002_GenerateSheet {
     // * -- Utility functions -- *
     // ***************************
 
-    private getBrowserLocale() {
-        if (navigator.language != undefined) {
-            return (navigator.languages[0]);
-        }
-        else {
-            return (navigator.language);
-        }
-    }
 
     private addButton(_a) {
         var text = _a.text, width = _a.width, top = _a.top, left = _a.left, id = _a.id;
@@ -408,121 +416,6 @@ class MRS002_GenerateSheet {
         return button;
     }
 
-    private addDays(date, days) {
-        let result = new Date(date);
-        result.setDate(result.getDate() + days);
-        return result;
-    }
-
-    private convertDateToM3Format(aDate: Date) {
-        return ("" + aDate.getFullYear() + ("00" + (aDate.getMonth() + 1)).slice(-2) + ("00" + (aDate.getDate())).slice(-2));
-    }
-
-    private convertDateToYYYYMMddWithSlashes(aDate: Date) {
-        return ("" + aDate.getFullYear() + "/" + ("00" + (aDate.getMonth() + 1)).slice(-2) + "/" + ("00" + (aDate.getDate())).slice(-2));
-    }
-
-    private convertDateToYYYYMMddWithDashes(aDate: Date) {
-        return ("" + aDate.getFullYear() + "-" + ("00" + (aDate.getMonth() + 1)).slice(-2) + "-" + ("00" + (aDate.getDate())).slice(-2));
-    }
-
-    private convertM3DateToDate(aM3Date: String): Date {
-        let result = null;
-
-        if (aM3Date.length > 7) {
-            try {
-                result = new Date(aM3Date.substr(0, 4) + "/" + aM3Date.substr(4, 2) + "/" + aM3Date.substr(6, 2));
-            }
-            catch (ex) {
-                this.gDebug.Error("Failed to convert '" + aM3Date + "' to a valid date object");
-            }
-
-        }
-        else {
-            this.gDebug.Debug("convertM3DateToDate() fail");
-            this.gDebug.Debug(" +--" + aM3Date.length);
-        }
-
-        return (result);
-    }
-
-    private ordinalSuffix(n) {
-        let j = n % 10, k = n % 100;
-        if (j == 1 && k != 11) {
-            return n + "st";
-        }
-        if (j == 2 && k != 12) {
-            return n + "nd";
-        }
-        if (j == 3 && k != 13) {
-            return n + "rd";
-        }
-        return (n + "th");
-    }
-
-    private calculateNumberOfDays(aStartDate: Date, aEndDate: Date) {
-        let dateRangeMS = aEndDate.getTime() - aStartDate.getTime();
-        return (Math.ceil((dateRangeMS / (1000 * 3600 * 24) + 1)));
-    }
-
-    // ***************************
-    // * -- item lookup table -- *
-    // ***************************
-
-    private addRelatedItem(aFacility, aItemNumber, aRelatedItem) {
-        let relatedItems = this.getRelatedItemNumbers(aFacility, aItemNumber);
-        if (relatedItems && relatedItems.length > 0) {
-            let relatedItem = relatedItems[0];
-            if (-1 == relatedItem.childItems.findIndex(c => c == aRelatedItem)) {
-                relatedItem.childItems.push(aRelatedItem);
-            }
-        }
-        else {
-            this.itemLookupTable.push({
-                facility: aFacility,
-                itemNumber: aItemNumber,
-                childItems: [aRelatedItem]
-            });
-        }
-    }
-
-    private isRelatedItemNumberValid(aFacility, aItemNumber, aRelatedItemNumber): boolean {
-        let result: boolean = false;
-
-        let relatedItems = this.getRelatedItemNumbers(aFacility, aItemNumber);
-        if (relatedItems && relatedItems.length > 0 && relatedItems[0].childItems.length > 0) {
-            if (-1 != relatedItems[0].childItems.findIndex(c => c == aRelatedItemNumber)) {
-                result = true;
-            }
-        }
-
-        return (result);
-    }
-
-    private getRelatedItemNumbers(aFacility, aItemNumber) {
-        return (this.itemLookupTable.filter(function (data) { return data.facility == aFacility && data.itemNumber == aItemNumber }));
-    }
-
-    private getRelatedItemNumbersChildren(aFacility, aItemNumber) {
-        let result = null;
-        let relatedItemNumbers = this.getRelatedItemNumbers(aFacility, aItemNumber);
-
-        if (null != relatedItemNumbers && undefined != relatedItemNumbers && relatedItemNumbers.length > 0) {
-            let relatedItemNumber = relatedItemNumbers[0];
-            if (null != relatedItemNumber.childItems && relatedItemNumber.childItems.length > 0) {
-                result = relatedItemNumber.childItems;
-            }
-        }
-        return (result);
-    }
-
-    private isValidFacility(aFacility) {
-        let result = true;
-
-        return (result);
-    }
-
-    private itemLookupTable = [];
 
     private convertCharactersToWidth(aCharacters) {
         let result = [];
