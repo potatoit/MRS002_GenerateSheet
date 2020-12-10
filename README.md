@@ -5,6 +5,8 @@ Generate Sheet is a quick little script I threw together to generate Excel templ
 
 This is a proof of concept and should be treated as such, there are no warranty claims implied or otherwise.
 
+See https://potatoit.kiwi/2020/12/11/evs100-loading-data-in-to-m3/ for more information.
+
 ## Installation
 
   1. Download the Samples\js\MRS002_GenerateSheet.js
